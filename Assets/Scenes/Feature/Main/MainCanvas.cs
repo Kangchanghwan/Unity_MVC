@@ -17,10 +17,8 @@ namespace Scenes.Feature.Main
 
         private void Awake()
         {
-            if (addButton != null)
-            {
-                addButton.onClick.AddListener(this.Emit<OnClickAddPointGameEvent>);
-            }
+            Debug.Assert(addButton != null);
+            addButton.onClick.AddListener(this.Emit<OnClickAddPointGameEvent>);
         }
     }
 }

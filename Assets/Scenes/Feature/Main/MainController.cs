@@ -6,13 +6,15 @@ using UnityEngine;
 
 public class MainController : MonoBehaviour, IMonoEventListener
 {
-    private Model _model;
+    private Score _score;
     [SerializeField] private TextMeshProUGUI textView;
 
     private void Awake()
     {
         Debug.Assert(textView != null);
-        _model = new Model();
+        
+        _score = Score.Initialize();
+        
         UpdateDisplay();
     }
 
@@ -20,8 +22,7 @@ public class MainController : MonoBehaviour, IMonoEventListener
     {
         if (@event is OnClickAddPointGameEvent)
         {
-            Debug.Log("OnClickAddPointGameEvent");
-            _model.AddData(10);
+            _score.AddData(10);
             UpdateDisplay();
         }
         return EventChain.Break;
@@ -29,6 +30,6 @@ public class MainController : MonoBehaviour, IMonoEventListener
 
     private void UpdateDisplay()
     {
-        textView.text = _model.Data.ToString();
+        textView.text = _score.Data.ToString();
     }
 }
