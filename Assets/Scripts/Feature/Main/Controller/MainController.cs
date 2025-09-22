@@ -13,7 +13,7 @@ public class MainController : MonoBehaviour, IMonoEventListener
     {
         Debug.Assert(textView != null);
         
-        _score = Score.Initialize();
+        _score = new Score();
         
         UpdateDisplay();
     }
