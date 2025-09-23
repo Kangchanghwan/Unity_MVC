@@ -1,7 +1,7 @@
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-namespace Scenes.Common
+namespace Common
 {
     public interface IState<T>
     {
@@ -11,10 +11,10 @@ namespace Scenes.Common
 
     public class StateMachine
     {
-        private readonly bool isLogging = false;
+        private readonly bool _isLogging = false;
         public StateMachine(bool isLogging)
         {
-            this.isLogging = isLogging;
+            _isLogging = isLogging;
         }
 
         public async UniTask Execute<T>(T state) where T : class, IState<T>
@@ -27,7 +27,7 @@ namespace Scenes.Common
                 {
                     await previousState.Exit(currentState);
                 }
-                if(isLogging)
+                if(_isLogging)
                 {
                     Debug.Log($"새로운 상태 진입 : {currentState.GetType().Name}");
                 }

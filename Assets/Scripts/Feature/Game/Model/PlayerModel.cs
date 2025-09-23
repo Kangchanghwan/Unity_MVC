@@ -1,48 +1,56 @@
-using Feature.Common;
+using System;
 using UnityEngine;
 
-namespace Scenes.Feature.Game.Model
+namespace Feature.Game.Model
 {
-    public struct PlayerHealthChangedEvent : IEvent
+    /// <summary>
+    /// 플레이어의 데이터와 로직을 관리하는 순수 C# 클래스
+    /// </summary>
+    public class PlayerModel
     {
-        public int Current { get; }
-        public int Max { get; }
+        public int MaxHealth { get; private set; }
+        public int CurrentHealth { get; private set; }
+        public bool IsDead { get; private set; }
 
-        public PlayerHealthChangedEvent(int current, int max)
+        // C# 이벤트로 Controller에게 알림
+        public event Action<int, int> OnHealthChanged; // (current, max)
+        public event Action OnPlayerDied;
+
+        public PlayerModel(int maxHealth = 3)
         {
-            Current = current;
-            Max = max;
+            MaxHealth = maxHealth;
+            CurrentHealth = maxHealth;
+            IsDead = false;
         }
-    }
-    
-    public struct PlayerDiedEvent : IEvent
-    {
-    }
 
-
-    public class PlayerModel : MonoBehaviour, IMonoEventDispatcher
-    {
-        [SerializeField] private int maxHealth = 3;
-        [SerializeField] private int currentHealth;
-
-        private void Awake()
+        public void ApplyDamage(int damage)
         {
-            currentHealth = maxHealth;
-            this.Emit(new PlayerHealthChangedEvent(currentHealth, maxHealth));
-        }
-        
-        public void ApplyDamage(int amount)
-        {
-            var next = Mathf.Max(0, currentHealth - amount);
-            
-            if(next == currentHealth) return;
-            
-            this.Emit(new PlayerHealthChangedEvent(currentHealth, maxHealth));
+            if (IsDead || damage <= 0) return;
 
-            if (currentHealth == 0)
+            var newHealth = Mathf.Max(0, CurrentHealth - damage);
+            if (newHealth == CurrentHealth) return;
+
+            CurrentHealth = newHealth;
+            OnHealthChanged?.Invoke(CurrentHealth, MaxHealth);
+
+            if (CurrentHealth <= 0)
             {
-                this.Emit<PlayerDiedEvent>();
+                Die();
             }
+        }
+
+        public void Heal(int amount)
+        {
+            if (IsDead || amount <= 0) return;
+
+            CurrentHealth = Mathf.Min(MaxHealth, CurrentHealth + amount);
+            OnHealthChanged?.Invoke(CurrentHealth, MaxHealth);
+        }
+
+        private void Die()
+        {
+            IsDead = true;
+            OnPlayerDied?.Invoke();
         }
     }
 }

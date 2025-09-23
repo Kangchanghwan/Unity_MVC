@@ -1,31 +1,74 @@
-using System;
 using Feature.Common;
-using Scenes.Feature.Game.Model;
-using Scenes.Feature.Game.View;
+using Feature.Game.Controller.Scenes.Feature.Game.Events;
+using Feature.Game.Model;
+using Feature.Game.View;
+using Scenes.Feature.Game.Controller;
 using UnityEngine;
 
-namespace Scenes.Feature.Game.Controller
+namespace Feature.Game.Controller.Bullet
 {
-    public class BulletController : MonoBehaviour, IMonoEventListener
+    /// <summary>
+    /// 총알의 Model과 View를 중재하는 Controller
+    /// </summary>
+    public class BulletController : EventListenerMono, IMonoEventDispatcher
     {
-        [SerializeField] private BulletModel bulletModel;
-        [SerializeField] private BulletView bulletView;
+        [Header("Bullet Settings")] [SerializeField]
+        private float speed = 3f;
+
+        [SerializeField] private int damage = 1;
+
+        private BulletModel _model;
+        private BulletView _view;
+
+        private void Awake()
+        {
+            _model = new BulletModel(speed, damage);
+            _view = GetComponentInChildren<BulletView>();
+        }
+
+        private void Start()
+        {
+            // Model의 C# 이벤트 구독
+            _model.OnBulletDestroyed += OnBulletDestroyed;
+
+            // 글로벌 이벤트 구독 (자신의 히트 이벤트 감지)
+            EventManager.Subscribe<BulletHitEvent>(this);
+        }
 
         private void Update()
         {
-            bulletView.GetComponent<Rigidbody2D>().linearVelocity = new Vector2(Time.deltaTime * -bulletModel.Speed, 0);
+            if (!_model.IsDestroyed)
+            {
+                // View에게 움직임 지시
+                _view.MoveBullet(_model.Speed);
+            }
         }
 
-        public EventChain OnEventHandle(IEvent @event)
+        // Model에서 오는 파괴 이벤트
+        private void OnBulletDestroyed()
         {
-            switch (@event)
+            _view.PlayDestroyEffect();
+            Destroy(gameObject, 0.5f); // 이펙트 재생 후 파괴
+        }
+
+        // 글로벌 이벤트 핸들러
+        public override EventChain OnEventHandle(IEvent @event)
+        {
+            if (@event is BulletHitEvent hitEvent)
             {
-                case BulletOnTriggerEvent:
-                    Destroy(gameObject);
-                    return EventChain.Break;
+                this.EmitGlobal(new ObjectDamagedEvent(_model.Damage, hitEvent.TargetTag));
+                _model.DestroyBullet();
+                return EventChain.Break;
             }
 
             return EventChain.Continue;
+        }
+
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            if (_model != null)
+                _model.OnBulletDestroyed -= OnBulletDestroyed;
         }
     }
 }

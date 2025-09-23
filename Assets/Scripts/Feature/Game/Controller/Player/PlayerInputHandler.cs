@@ -1,17 +1,17 @@
 using System;
 using Feature.Common;
+using Feature.Game.Controller.Scenes.Feature.Game.Events;
 using UnityEngine;
 
 namespace Scenes.Feature.Game.Controller
 {
-    public struct PlayerJumpEvent : IEvent
-    {
-    }
-
-    // Input 을 처리하는 클래스
+    /// <summary>
+    /// 플레이어 입력을 처리하는 컴포넌트
+    /// </summary>
     public class PlayerInputHandler : MonoBehaviour, IMonoEventDispatcher
     {
         private InputManager _inputManager;
+
         private void Awake()
         {
             _inputManager = new InputManager();
@@ -25,8 +25,7 @@ namespace Scenes.Feature.Game.Controller
 
         private void OnDisable()
         {
-            _inputManager.Disable();
+            _inputManager?.Disable();
         }
-        
     }
 }

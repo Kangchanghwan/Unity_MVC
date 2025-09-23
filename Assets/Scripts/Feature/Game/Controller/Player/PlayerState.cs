@@ -1,9 +1,9 @@
+using System;
+using Common;
 using Cysharp.Threading.Tasks;
-using Scenes.Common;
-using SmallScaleInteractive._2DCharacter;
 using UnityEngine;
 
-namespace Scenes.Feature.Game.Controller
+namespace Feature.Game.Controller.Player
 {
     public abstract class PlayerStateBase : IState<PlayerStateBase>
     {
@@ -19,6 +19,7 @@ namespace Scenes.Feature.Game.Controller
     {
         public override UniTask<PlayerStateBase> Enter(PlayerStateBase previousState)
         {
+            Debug.Log("Idle 상태 진입");
             return UniTask.FromResult<PlayerStateBase>(null);
         }
     }
@@ -29,20 +30,24 @@ namespace Scenes.Feature.Game.Controller
 
         public JumpState(PlayerController controller)
         {
-            _controller = controller;
+            this._controller = controller;
         }
 
         public override async UniTask<PlayerStateBase> Enter(PlayerStateBase previousState)
         {
-            // 점프 애니메이션 등
-            _controller.Jump();
+            Debug.Log("Jump 상태 진입");
             
-            await UniTask.WaitUntil(() => _controller.IsGrounded);
+            // 점프 실행
+            _controller.ExecuteJump();
+            
+            // 착지할 때까지 대기
+            await UniTask.WaitUntil(() => _controller.IsGrounded());
+            
+            Debug.Log("착지 완료, Idle로 전환");
             return new IdleState();
         }
     }
-    
-    // 죽음 상태
+
     public class DiedState : PlayerStateBase
     {
         private readonly PlayerController _controller;
@@ -52,10 +57,17 @@ namespace Scenes.Feature.Game.Controller
             _controller = controller;
         }
 
-        public override UniTask<PlayerStateBase> Enter(PlayerStateBase previousState)
+        public override async UniTask<PlayerStateBase> Enter(PlayerStateBase previousState)
         {
-            Debug.Log("사망");
-            return UniTask.FromResult<PlayerStateBase>(new IdleState());
+            Debug.Log("Die 상태 진입 - 게임 오버");
+            
+            // 죽음 애니메이션 길이만큼 대기 (실제 애니메이션 길이에 맞춤)
+            await UniTask.Delay(TimeSpan.FromSeconds(1.5f));
+            
+            UnityEngine.Object.Destroy(_controller.gameObject);
+            Debug.Log("Die 상태 끝 - 개체 삭제됨");
+            return null;
         }
+
     }
 }
