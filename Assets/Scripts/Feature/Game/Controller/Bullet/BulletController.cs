@@ -30,9 +30,6 @@ namespace Feature.Game.Controller.Bullet
         {
             // Model의 C# 이벤트 구독
             _model.OnBulletDestroyed += OnBulletDestroyed;
-
-            // 글로벌 이벤트 구독 (자신의 히트 이벤트 감지)
-            EventManager.Subscribe<BulletHitEvent>(this);
         }
 
         private void Update()
